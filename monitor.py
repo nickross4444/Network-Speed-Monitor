@@ -11,13 +11,21 @@ MEASURING_INTERVAL = 5
 # Logging configuration
 logging.basicConfig(filename='network_speed.log', level=logging.INFO, format='%(asctime)s: %(message)s')
 
-def measure_speed():
-    st = speedtest.Speedtest()
-    st.download()
-    st.upload()
-    download_speed = st.results.download / 1e6  # Convert to Mbps
-    upload_speed = st.results.upload / 1e6  # Convert to Mbps
-    return download_speed, upload_speed
+def measure_speed(retries=3):
+    attempt = 0
+    while attempt < retries:
+        try:
+            st = speedtest.Speedtest()
+            st.download()
+            st.upload()
+            download_speed = st.results.download / 1e6  # Convert to Mbps
+            upload_speed = st.results.upload / 1e6  # Convert to Mbps
+            return download_speed, upload_speed
+        except Exception as e:
+            print(f"Attempt {attempt + 1} failed: {e}")
+            attempt += 1
+            time.sleep(10)  # Wait a bit before retrying
+    return None, None  # Return None if all attempts fail
 
 def learn_normal_speeds(runs=LEARNING_MODE_RUNS):
     download_speeds = []
