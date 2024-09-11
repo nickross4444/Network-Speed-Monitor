@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Speed Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            max-width: 800px;
+            background-color: #fff;
+            padding: 20px;
+            margin-top: 50px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 20px 0;
+            transition: background-color 0.3s ease;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .speeds {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        .speeds div {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+            width: 40%;
+        }
+        .speeds div h2 {
+            color: #555;
+            margin: 0 0 10px;
+        }
+        #plot {
+            margin-top: 20px;
+        }
+        #status {
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Network Speed Dashboard</h1>
+        <div class="speeds">
+            <div id="download_speed">
+                <h2>Download Speed</h2>
+                <p id="download_value">-- Mbps</p>
+            </div>
+            <div id="upload_speed">
+                <h2>Upload Speed</h2>
+                <p id="upload_value">-- Mbps</p>
+            </div>
+        </div>
+
+        <button class="button" onclick="runSpeedTest()">Run Speed Test</button>
+
+        <div id="plot">
+            <h2>Speed over Time</h2>
+            <img id="speed_plot" src="/plot" alt="Speed over time plot">
+        </div>
+
+        <div id="status">
+            <p>Status: <span id="status_text">Idle</span></p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            fetchLatestSpeeds();
+            updatePlot()
+             // Set interval to run fetchLatestSpeeds every 2 seconds (2000 milliseconds)
+            setInterval(fetchLatestSpeeds, 2000);
+        });
+
+        function fetchLatestSpeeds() {
+            fetch('/latest_speed')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('download_value').innerText = data.download_speed.toFixed(2) + " Mbps";
+                    document.getElementById('upload_value').innerText = data.upload_speed.toFixed(2) + " Mbps";
+                    setStatus(data.status);
+                    updatePlot();
+                })
+                .catch(error => console.error('Error fetching latest speeds:', error));
+        }
+
+        function runSpeedTest() {
+            //setStatus("Running");
+            fetch('/speedtest')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                        setStatus("Error");
+                    } else {
+                        document.getElementById('download_value').innerText = data.download_speed.toFixed(2) + " Mbps";
+                        document.getElementById('upload_value').innerText = data.upload_speed.toFixed(2) + " Mbps";
+                        //setStatus("Idle");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error running speed test:', error);
+                    setStatus("Error");
+                });
+        }
+
+        function updatePlot() {
+            const plotImage = document.getElementById('speed_plot');
+            plotImage.src = '/plot?' + new Date().getTime();  // Add a timestamp to force the browser to reload the image
+        }
+
+        function setStatus(status) {
+            document.getElementById('status_text').innerText = status;
+        }
+       
+    </script>
+</body>
+</html>
