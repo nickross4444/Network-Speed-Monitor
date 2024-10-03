@@ -107,10 +107,10 @@
             setStatus(data.status);
             updatePlot();
         });
+
         socket.on('status_update', (data) => {
             setStatus(data.status);
         });
-
 
         function setStatus(status) {
             document.getElementById('status_text').innerText = status;
@@ -120,6 +120,9 @@
             const plotImage = document.getElementById('speed_plot');
             plotImage.src = '/plot?' + new Date().getTime();  // Add a timestamp to force the browser to reload the image
         }
+
+        // Set initial status when the page loads
+        setStatus('Idle');
 
         function runSpeedTest() {
             fetch('/speedtest')
